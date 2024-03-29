@@ -7,6 +7,7 @@ function Planner() {
     const [remaining, setRemaining] = useState(5000);
     const [spent, setSpent] = useState(0);
     const [budget, setBudget] = useState(5000)
+    const [addAmount, setAddAmount] = useState(0);
 
     const Obj = new Date();
     let day = ("0" + Obj.getDate()).slice(-2),
@@ -14,30 +15,40 @@ function Planner() {
         year = Obj.getFullYear(),
         createdAt = `${day}/${month}/${year}`;
 
-useEffect(() => {   
-    let data = localStorage.getItem("data");
-        if (data) {
-            let parsedData = JSON.parse(data);
-            setExpenses(parsedData);
-            let totalAmount = parsedData.reduce((acc, curr) => acc + curr.amount, 0);
-            setRemaining(budget - totalAmount);
-            setSpent(totalAmount);
-
-        } else {
-            localStorage.setItem("data", JSON.stringify([]));
-            setExpenses([]);
+        useEffect(() => {   
+            let data = localStorage.getItem("data");
+            console.log(data);
+            let totalAmount;
+            if (data) {
+                let parsedData = JSON.parse(data);
+                setExpenses(parsedData);
+                 totalAmount = parsedData.reduce((acc, curr) => acc + curr.amount, 0);
+                setSpent(totalAmount);
+                setRemaining(budget - totalAmount);
+            } else {
+                localStorage.setItem("data", JSON.stringify([]));
+                setExpenses([]);
+            }
+        
+            const savedBudget = localStorage.getItem("money");
+            if (savedBudget) {
+                const parsedBudget = JSON.parse(savedBudget).budget;
+                console.log(parsedBudget);
+                setBudget(parsedBudget);
+                setRemaining(parsedBudget - totalAmount); 
+            }
+        }, []); 
+        
+        const addExpense = () =>{
+            const newExpense = { category, amount, createdAt};
+            const money = { budget: budget }; 
+            setRemaining(remaining - amount);
+            setSpent(spent + amount);
+            setExpenses([...expenses, newExpense]);
+            localStorage.setItem("data", JSON.stringify([...expenses, newExpense]));
+            localStorage.setItem("money", JSON.stringify(money)); 
         }
-    },[budget]);
- 
-
-const addExpense = () =>{
-    const newExpense = { category, amount, createdAt };
-    setRemaining(remaining - amount)
-    setSpent(spent + amount)
-    setExpenses([...expenses, newExpense]);
-    localStorage.setItem("data", JSON.stringify([...expenses, newExpense]));
-}
-
+        
 function handleAmmount(e){
     setAmmout(parseInt(e.target.value));
 
@@ -53,6 +64,17 @@ const deleteItem  = (index) => {
     localStorage.setItem("data", JSON.stringify(newArr));    
 };
 
+function handleAdd(){
+    const addedBudget = budget + addAmount;
+    setBudget(addedBudget);
+    setRemaining(remaining + addAmount);
+    setAddAmount(0);
+}
+
+function handleReset(){
+    localStorage.clear();
+    window.location.reload()
+}
   return (
     <div className='container'>
         <div className='heading'><h1>My Budget Planner</h1></div>
@@ -61,7 +83,11 @@ const deleteItem  = (index) => {
             <div className='remaining'>Remaining: Rs.{remaining}</div>
             <div className='spent'>Spant so far: Rs.{spent}</div>
         </div>
-
+        <div className='input-fields'>
+            <label>Add Money:</label>
+            <input type='number' value={addAmount} onChange={e => setAddAmount(parseInt(e.target.value))}  />
+            <button onClick={handleAdd}>Add</button>
+        </div>
         <div className='input-fields'>
             <label htmlFor="category">Category:</label>
             <select id="category" name='category' value={category} onChange={e => setCategory(e.target.value)}>
@@ -99,6 +125,11 @@ const deleteItem  = (index) => {
                     ))}
           </tbody>
       </table>
+      <div className='reset'>
+      <hr/>
+
+      <button className='reset-btn' onClick={handleReset}>Reset</button>
+      </div>
 
 
     </div>
